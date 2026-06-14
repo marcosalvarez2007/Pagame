@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout Seguro | Mercado Pago</title>
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
     <style>
         :root {
             --mp-blue: #009ee3;
@@ -107,36 +108,29 @@
             gap: 5px;
         }
 
-        /* Botón de Pago estilo Mercado Pago */
-        .mp-button {
-            display: block;
+        /* Contenedor del Brick de Mercado Pago */
+        #wallet_container {
             width: 100%;
-            text-align: center;
-            background-color: var(--mp-blue);
-            color: #ffffff;
-            padding: 14px 24px;
-            font-size: 16px;
-            font-weight: 600;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: background-color 0.2s ease, transform 0.1s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .mp-button:hover {
-            background-color: var(--mp-blue-dark);
+        /* Animación de carga */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid var(--mp-blue);
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
         }
 
-        .mp-button:active {
-            transform: scale(0.98);
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        .payment-methods-img {
-            margin-top: 20px;
-            max-width: 80%;
-            opacity: 0.7;
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
@@ -169,11 +163,82 @@
                 Pago 100% procesado de forma segura
             </div>
             
-            <a href="https://mpago.la/1njXuSJ" target="_blank" id="checkout-btn" class="mp-button">Pagar con Mercado Pago</a>
+            <div id="loading-spinner" class="loader"></div>
 
-            <img src="https://imgmp.mpcdn.net/0125/resources/utils/payment-methods.png" alt="Métodos de pago" class="payment-methods-img">
+            <div id="wallet_container"></div>
         </div>
     </div>
 
+    <script>
+        // ==========================================
+        // CONFIGURACIÓN REAL CORREGIDA
+        // ==========================================
+        
+        // 1. Tu Public Key real (Debe ir entre comillas obligatoriamente)
+        const MI_PUBLIC_KEY_PROD = "APP_USR-8761208335232861-032412-aa5ac1dfd18dbc0ebefc06172e62f12c-1873929241"; 
+
+        // 2. Tu enlace de pago real
+        const MI_LINK_DE_PAGO = "https://mpago.la/1njXuSJ"; 
+
+        // ==========================================
+        // LÓGICA DE INICIALIZACIÓN
+        // ==========================================
+        
+        function obtenerPreferenceId(link) {
+            try {
+                const url = new URL(link);
+                if(url.hostname.includes("mpago.la")) {
+                    return url.pathname.replace("/", "");
+                }
+                return url.searchParams.get("pref_id") || url.pathname.split("/").pop();
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function initMercadoPago() {
+            const spinner = document.getElementById('loading-spinner');
+            
+            // Corregido: Pasamos la variable correcta
+            const prefId = obtenerPreferenceId(MI_LINK_DE_PAGO); 
+
+            // Corregido: Validación limpia para verificar que los datos no estén vacíos
+            if (!MI_PUBLIC_KEY_PROD || MI_PUBLIC_KEY_PROD.includes("APP_USR-8761208335232861-032412-aa5ac1dfd18dbc0ebefc06172e62f12c-1873929241") || !prefId) {
+                spinner.classList.add('hidden');
+                alert("Faltan configurar correctamente las credenciales.");
+                return;
+            }
+
+            try {
+                // Corregido: Pasamos la variable que tiene almacenada la llave
+                const mp = new MercadoPago(MI_PUBLIC_KEY_PROD, {
+                    locale: 'es-AR' 
+                });
+
+                // Crea el botón inteligente (Wallet Brick)
+                await mp.bricks().create("wallet", "wallet_container", {
+                    initialization: {
+                        preferenceId: prefId,
+                        redirectMode: "modal" 
+                    },
+                    customization: {
+                        texts: {
+                            valueProp: 'smart_option' 
+                        }
+                    }
+                });
+
+                // Oculta el cargador una vez que el botón oficial aparece
+                spinner.classList.add('hidden');
+
+            } catch (error) {
+                console.error("Error cargando Mercado Pago Brick:", error);
+                spinner.innerText = "Error al conectar con Mercado Pago.";
+            }
+        }
+
+        // Ejecutar al cargar la página
+        document.addEventListener("DOMContentLoaded", initMercadoPago);
+    </script>
 </body>
-</html>
+                    </html>
