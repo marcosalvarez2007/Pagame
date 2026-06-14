@@ -171,13 +171,13 @@
 
     <script>
         // ==========================================
-        // CONFIGURACIÓN DE CONFIGURACIÓN REAL
+        // CONFIGURACIÓN REAL CORREGIDA
         // ==========================================
         
-        // 1. Pon tu Public Key de Producción (la que conseguiste en el panel de Developers)
-        const MI_PUBLIC_KEY_PROD = "APP_USR-TU-PUBLIC-KEY-AQUI"; 
+        // 1. Tu Public Key real (Debe ir entre comillas obligatoriamente)
+        const MI_PUBLIC_KEY_PROD = "APP_USR-ccce38c7-04cf-44b7-a0e9-60d6aefa6937"; 
 
-        // 2. Pon el enlace de pago que creaste en la app o web (Mercado Pago extraerá el ID automáticamente)
+        // 2. Tu enlace de pago real
         const MI_LINK_DE_PAGO = "https://mpago.la/1njXuSJ"; 
 
         // ==========================================
@@ -185,14 +185,11 @@
         // ==========================================
         
         function obtenerPreferenceId(link) {
-            // Extrae el ID identificador del enlace que pusiste arriba
             try {
                 const url = new URL(link);
-                // Si es un link corto (mpago.la/XXXXXX)
                 if(url.hostname.includes("mpago.la")) {
                     return url.pathname.replace("/", "");
                 }
-                // Si es un link largo tradicional
                 return url.searchParams.get("pref_id") || url.pathname.split("/").pop();
             } catch (e) {
                 return null;
@@ -201,29 +198,32 @@
 
         async function initMercadoPago() {
             const spinner = document.getElementById('loading-spinner');
-            const prefId = obtenerPreferenceId(https://mpago.la/1njXuSJ);
+            
+            // Corregido: Pasamos la variable correcta
+            const prefId = obtenerPreferenceId(MI_LINK_DE_PAGO); 
 
-            if (MI_PUBLIC_KEY_PROD.includes("APP_USR-ccce38c7-04cf-44b7-a0e9-60d6aefa6937") || !prefId) {
+            // Corregido: Validación limpia para verificar que los datos no estén vacíos
+            if (!MI_PUBLIC_KEY_PROD || MI_PUBLIC_KEY_PROD.includes("TU-PUBLIC-KEY") || !prefId) {
                 spinner.classList.add('hidden');
-                alert("Por favor, edita el código fuente y coloca tu Public Key de producción y tu Link de Pago reales.");
+                alert("Faltan configurar correctamente las credenciales.");
                 return;
             }
 
             try {
-                // Inicializa el SDK con tus datos de producción
-                const mp = new MercadoPago(APP_USR-ccce38c7-04cf-44b7-a0e9-60d6aefa6937, {
-                    locale: 'es-AR' // Cambia a 'es-MX', 'es-CO', 'es-CL' según tu país
+                // Corregido: Pasamos la variable que tiene almacenada la llave
+                const mp = new MercadoPago(MI_PUBLIC_KEY_PROD, {
+                    locale: 'es-AR' 
                 });
 
                 // Crea el botón inteligente (Wallet Brick)
                 await mp.bricks().create("wallet", "wallet_container", {
                     initialization: {
                         preferenceId: prefId,
-                        redirectMode: "modal" // Abre la experiencia estéticamente sobre tu web
+                        redirectMode: "modal" 
                     },
                     customization: {
                         texts: {
-                            valueProp: 'smart_option' // Muestra las cuotas y tarjetas disponibles del usuario
+                            valueProp: 'smart_option' 
                         }
                     }
                 });
@@ -237,8 +237,4 @@
             }
         }
 
-        // Ejecutar al cargar la página
-        document.addEventListener("DOMContentLoaded", initMercadoPago);
-    </script>
-</body>
-</html>
+        // Ejecutar
