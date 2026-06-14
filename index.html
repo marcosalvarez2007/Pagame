@@ -175,7 +175,7 @@
         // ==========================================
         
         // 1. Tu Public Key real (Debe ir entre comillas obligatoriamente)
-        const MI_PUBLIC_KEY_PROD = "APP_USR-8761208335232861-032412-aa5ac1dfd18dbc0ebefc06172e62f12c-1873929241"; 
+        const MI_PUBLIC_KEY_PROD = "APP_USR-ccce38c7-04cf-44b7-a0e9-60d6aefa6937"; 
 
         // 2. Tu enlace de pago real
         const MI_LINK_DE_PAGO = "https://mpago.la/1njXuSJ"; 
@@ -203,7 +203,7 @@
             const prefId = obtenerPreferenceId(MI_LINK_DE_PAGO); 
 
             // Corregido: Validación limpia para verificar que los datos no estén vacíos
-            if (!MI_PUBLIC_KEY_PROD || MI_PUBLIC_KEY_PROD.includes("APP_USR-8761208335232861-032412-aa5ac1dfd18dbc0ebefc06172e62f12c-1873929241") || !prefId) {
+            if (!MI_PUBLIC_KEY_PROD || MI_PUBLIC_KEY_PROD.includes("APP_USR-ccce38c7-04cf-44b7-a0e9-60d6aefa6937") || !prefId) {
                 spinner.classList.add('hidden');
                 alert("Faltan configurar correctamente las credenciales.");
                 return;
