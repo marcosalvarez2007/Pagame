@@ -171,54 +171,35 @@
 
     <script>
         // ==========================================
-        // CONFIGURACIÓN REAL CORREGIDA
+        // CONFIGURACIÓN REAL ACTUALIZADA
         // ==========================================
         
-        // 1. Tu Public Key real (Debe ir entre comillas obligatoriamente)
+        // Tu Public Key de producción (Se mantiene pública en el Front)
         const MI_PUBLIC_KEY_PROD = "APP_USR-ccce38c7-04cf-44b7-a0e9-60d6aefa6937"; 
 
-        // 2. Tu enlace de pago real
-        const MI_LINK_DE_PAGO = "https://mpago.la/1njXuSJ"; 
-
-        // ==========================================
-        // LÓGICA DE INICIALIZACIÓN
-        // ==========================================
-        
-        function obtenerPreferenceId(link) {
-            try {
-                const url = new URL(link);
-                if(url.hostname.includes("mpago.la")) {
-                    return url.pathname.replace("/", "");
-                }
-                return url.searchParams.get("pref_id") || url.pathname.split("/").pop();
-            } catch (e) {
-                return null;
-            }
-        }
+        // El Preference ID interno real obtenido desde tu link corto
+        const PREFERENCE_ID_REAL = "1831899147-79cb867c-9b81-4b13-ba14-5d5df2f0e0df"; 
 
         async function initMercadoPago() {
             const spinner = document.getElementById('loading-spinner');
-            
-            // Corregido: Pasamos la variable correcta
-            const prefId = obtenerPreferenceId(MI_LINK_DE_PAGO); 
 
-            // Corregido: Validación limpia para verificar que los datos no estén vacíos
-            if (!MI_PUBLIC_KEY_PROD || MI_PUBLIC_KEY_PROD.includes("APP_USR-ccce38c7-04cf-44b7-a0e9-60d6aefa6937") || !prefId) {
+            // Corregido: Quitamos la condición que te bloqueaba al poner tu propia llave
+            if (!MI_PUBLIC_KEY_PROD || MI_PUBLIC_KEY_PROD === "" || !PREFERENCE_ID_REAL) {
                 spinner.classList.add('hidden');
                 alert("Faltan configurar correctamente las credenciales.");
                 return;
             }
 
             try {
-                // Corregido: Pasamos la variable que tiene almacenada la llave
+                // Inicializamos el SDK de la API con tu Public Key
                 const mp = new MercadoPago(MI_PUBLIC_KEY_PROD, {
                     locale: 'es-AR' 
                 });
 
-                // Crea el botón inteligente (Wallet Brick)
+                // Construimos el botón oficial usando el ID mapeado
                 await mp.bricks().create("wallet", "wallet_container", {
                     initialization: {
-                        preferenceId: prefId,
+                        preferenceId: PREFERENCE_ID_REAL,
                         redirectMode: "modal" 
                     },
                     customization: {
@@ -228,7 +209,7 @@
                     }
                 });
 
-                // Oculta el cargador una vez que el botón oficial aparece
+                // Ocultamos el spinner de carga al renderizar exitosamente el botón
                 spinner.classList.add('hidden');
 
             } catch (error) {
@@ -237,8 +218,8 @@
             }
         }
 
-        // Ejecutar al cargar la página
+        // Ejecutar al terminar de estructurar el DOM
         document.addEventListener("DOMContentLoaded", initMercadoPago);
     </script>
 </body>
-                    </html>
+</html>
