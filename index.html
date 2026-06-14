@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout Seguro | Mercado Pago</title>
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <style>
+        :root {
+            --mp-blue: #009ee3;
+            --mp-blue-dark: #007eb5;
+            --text-color: #333333;
+            --bg-color: #f5f5f5;
+            --card-bg: #ffffff;
+            --border-color: #e6e6e6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .checkout-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Encabezado del Checkout */
+        .checkout-header {
+            background-color: #fff;
+            padding: 24px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .checkout-header img {
+            height: 30px;
+            margin-bottom: 12px;
+        }
+
+        .checkout-header h2 {
+            font-size: 18px;
+            font-weight: 500;
+            color: #4a4a4a;
+        }
+
+        /* Resumen de Compra */
+        .order-summary {
+            padding: 24px;
+            background-color: #fafafa;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .item-detail {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .total-price {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed var(--border-color);
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        /* Sección de Pago */
+        .payment-section {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .payment-info {
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        /* Contenedor del Brick de Mercado Pago */
+        #wallet_container {
+            width: 100%;
+        }
+
+        /* Animación de carga */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid var(--mp-blue);
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="checkout-container">
+        <div class="checkout-header">
+            <img src="https://imgmp.mpcdn.net/0125/resources/utils/mp-logo.png" alt="Mercado Pago">
+            <h2>Resumen de tu pedido</h2>
+        </div>
+
+        <div class="order-summary">
+            <div class="item-detail">
+                <span>Pagameeeee Rata x1</span>
+                <span>$ 1.500,00</span>
+            </div>
+            <div class="item-detail">
+                <span>Envío</span>
+                <span style="color: #00a650; font-weight: 500;">Gratis</span>
+            </div>
+            <div class="total-price">
+                <span>Total a pagar</span>
+                <span>$ 1.500,00</span>
+            </div>
+        </div>
+
+        <div class="payment-section">
+            <div class="payment-info">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Pago 100% procesado de forma segura
+            </div>
+            
+            <div id="loading-spinner" class="loader"></div>
+
+            <div id="wallet_container"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // CONFIGURACIÓN DE CONFIGURACIÓN REAL
+        // ==========================================
+        
+        // 1. Pon tu Public Key de Producción (la que conseguiste en el panel de Developers)
+        const MI_PUBLIC_KEY_PROD = "APP_USR-TU-PUBLIC-KEY-AQUI"; 
+
+        // 2. Pon el enlace de pago que creaste en la app o web (Mercado Pago extraerá el ID automáticamente)
+        const MI_LINK_DE_PAGO = "https://mpago.la/1njXuSJ"; 
+
+        // ==========================================
+        // LÓGICA DE INICIALIZACIÓN
+        // ==========================================
+        
+        function obtenerPreferenceId(link) {
+            // Extrae el ID identificador del enlace que pusiste arriba
+            try {
+                const url = new URL(link);
+                // Si es un link corto (mpago.la/XXXXXX)
+                if(url.hostname.includes("mpago.la")) {
+                    return url.pathname.replace("/", "");
+                }
+                // Si es un link largo tradicional
+                return url.searchParams.get("pref_id") || url.pathname.split("/").pop();
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function initMercadoPago() {
+            const spinner = document.getElementById('loading-spinner');
+            const prefId = obtenerPreferenceId(https://mpago.la/1njXuSJ);
+
+            if (MI_PUBLIC_KEY_PROD.includes("APP_USR-ccce38c7-04cf-44b7-a0e9-60d6aefa6937") || !prefId) {
+                spinner.classList.add('hidden');
+                alert("Por favor, edita el código fuente y coloca tu Public Key de producción y tu Link de Pago reales.");
+                return;
+            }
+
+            try {
+                // Inicializa el SDK con tus datos de producción
+                const mp = new MercadoPago(APP_USR-ccce38c7-04cf-44b7-a0e9-60d6aefa6937, {
+                    locale: 'es-AR' // Cambia a 'es-MX', 'es-CO', 'es-CL' según tu país
+                });
+
+                // Crea el botón inteligente (Wallet Brick)
+                await mp.bricks().create("wallet", "wallet_container", {
+                    initialization: {
+                        preferenceId: prefId,
+                        redirectMode: "modal" // Abre la experiencia estéticamente sobre tu web
+                    },
+                    customization: {
+                        texts: {
+                            valueProp: 'smart_option' // Muestra las cuotas y tarjetas disponibles del usuario
+                        }
+                    }
+                });
+
+                // Oculta el cargador una vez que el botón oficial aparece
+                spinner.classList.add('hidden');
+
+            } catch (error) {
+                console.error("Error cargando Mercado Pago Brick:", error);
+                spinner.innerText = "Error al conectar con Mercado Pago.";
+            }
+        }
+
+        // Ejecutar al cargar la página
+        document.addEventListener("DOMContentLoaded", initMercadoPago);
+    </script>
+</body>
+</html>
